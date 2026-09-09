@@ -1,99 +1,86 @@
 # Доменная модель
 
-## Обзор
+> Кто есть кто в данных. Правда — транзакции; позиции и партии — быстрый кэш.
 
-Модель построена вокруг **единой транзакционной книги** (ADR-003): позиции и стоимость выводятся из транзакций, а не хранятся отдельно. Доходы (дивиденды/купоны) — это отдельные события (ADR-006).
+Правила учёта — в [rules.md](rules.md).
 
-## Сущности
+## Суть
 
 ```mermaid
 erDiagram
-    USER ||--o{ ACCOUNT : owns
-    USER ||--o{ EXPENSE : has
-    USER ||--o{ BUDGET : sets
-
-    ACCOUNT ||--o{ TRANSACTION : contains
-    ACCOUNT ||--o{ POSITION : holds
-
-    ASSET ||--o{ TRANSACTION : involved
-    ASSET ||--o{ POSITION : referenced
-    ASSET ||--o{ PRICE : priced
-    ASSET ||--o{ INCOME_EVENT : yields
-
-    TRANSACTION ||--o{ INCOME_EVENT : may_trigger
-
-    POSITION ||--o{ LOT : composed_of
-
-    IMPORT_BATCH ||--o{ TRANSACTION : produced
-    IMPORT_BATCH ||--o{ IMPORT_ITEM : contains
+  USER ||--o{ ACCOUNT : owns
+  ACCOUNT ||--o{ TRANSACTION : contains
+  ACCOUNT ||--o{ POSITION : holds
+  ASSET ||--o{ TRANSACTION : involved
+  ASSET ||--o{ POSITION : referenced
+  ASSET ||--o{ INCOME_EVENT : yields
+  POSITION ||--o{ LOT : composed_of
 ```
 
-## Описание сущностей
+| Сущность | Простыми словами | Статус |
+|---|---|---|
+| **User** | Ты: email, пароль, базовая валюта | готово |
+| **Account** | Счёт / кошелёк (`broker` / `wallet` / `cash`) | готово |
+| **Asset** | Бумага или монета в общем справочнике | готово |
+| **ExternalAsset** | Кэш поиска во внешних API | готово |
+| **Transaction** | Строка дневника сделок | готово |
+| **Position** | «Сколько бумаг сейчас» (кэш из книги) | готово |
+| **Lot** | Партия покупки для FIFO | готово |
+| **IncomeEvent** | Дивиденд / купон с датами и налогом | готово |
+| Price / Expense / Budget / Import* | История цен, расходы, импорт | позже |
 
-### User
-- `id`, `email` (уникальный), `passwordHash`, `name`, `createdAt`.
-- Настройки: базовая валюта, часовой пояс.
+## Деньги в БД
 
-### Account (счёт/кошелёк)
-- Тип: `broker` (брокерский), `exchange` (крипто-биржа), `wallet` (крипто-кошелёк), `cash` (наличные/банк), `card`.
-- `currency` (валюта счёта), `name`, `institution` (брокер/биржа).
-- `externalRef` — связь с источником (для авто-импорта).
+Каждая сумма — **два столбца**: `<field>_amount` (`bigint`) + `<field>_currency` (ISO 4217).  
+Колонки через `moneyAmountColumn` (`apps/api/src/common/money-column.ts`).
 
-### Asset (актив/инструмент)
-- Тип: `stock`, `bond`, `fund` (ETF/ПИФ), `crypto`, `cash`, `fx`.
-- `symbol`, `name`, `isin`/`figi`/`ticker`, `currency`.
-- Нормализованный справочник (глобальный, не per-user), чтобы цены и income events были общими.
+Пример: `12345` + `RUB` = 123.45 ₽.
 
-### Transaction (транзакция — ядро книги)
-- Типы: `buy`, `sell`, `dividend`, `coupon`, `fee`, `tax`, `deposit`, `withdrawal`, `transfer`, `opening` (снапшот-ввод), `income` (доход).
-- Поля: `accountId`, `assetId` (nullable для денежных), `date`, `quantity`, `price`, `amount`, `currency`, `fee`, `tax`, `note`.
-- **Деньги — целые числа** в минимальных единицах (копейки/сатоши) + `currency` (ADR-002).
-- `source` + `sourceId` — происхождение (manual / broker-api / import) для идемпотентности.
-- `opening`-транзакции помечаются флагом (см. data-entry-modes).
+`quantity` — `numeric(28,8)` (штуки, дробные).
 
-### Position (позиция — производная, кэш)
-- Не является источником истины, но кэшируется для скорости: `accountId`, `assetId`, `quantity`, `avgCostBasis`, `currency`.
-- Пересчитывается из транзакций (материализованное представление / агрегация).
+## Таблицы (TypeORM)
 
-### Lot (партия — для cost basis)
-- `positionId`, `quantity`, `costBasis`, `acquiredAt`.
-- Нужен для методов FIFO/AVCO при продажах и расчёта реализованной прибыли.
+| Сущность | Таблица | Ключевое |
+|---|---|---|
+| User | `users` | email unique, passwordHash, baseCurrency |
+| Account | `accounts` | userId CASCADE, type, currency |
+| Asset | `assets` | symbol, type, currency (глобальный справочник) |
+| Transaction | `transactions` | type, date, Money-поля, source+sourceId |
+| Position | `positions` | unique (accountId, assetId), avgCostBasis |
+| Lot | `lots` | positionId, quantity, costBasis, acquiredAt |
+| ExternalAsset | `external_assets` | symbol+source unique, кэш поиска |
+| IncomeEvent | `income_events` | paymentDate, gross/taxWithheld/net, reinvested |
 
-### Price (цена актива)
-- `assetId`, `date`, `price`, `currency`, `source` (какой провайдер).
-- Хранит историю для графиков и оценки на дату.
+Уникальный `(source, sourceId)` на транзакции — повторный импорт не дублирует строки.
 
-### IncomeEvent (доходное событие — ADR-006)
-- Тип: `dividend`, `coupon`, `interest`, `distribution`.
-- Ключевые даты (best practice из Investopedia): `announcementDate`, `exDate`, `recordDate`, `paymentDate`.
-- Поля: `assetId`, `accountId`, `grossAmount`, `taxWithheld`, `netAmount`, `currency`, `reinvested` (DRIP).
-- Может быть связано с транзакцией (когда доход зачислен деньгами) или существовать отдельно.
+Индексы: `transactions (accountId, date)`, `(accountId, assetId)`; `lots` по `positionId`.
 
-### Expense (расход) / Budget (бюджет)
-- `Expense`: `userId`, `categoryId`, `amount`, `currency`, `date`, `note`.
-- `Budget`: `userId`, `categoryId`, `period`, `limit`.
-- `Category`: справочник категорий расходов.
+## Типы транзакций
 
-### ImportBatch / ImportItem (импорт отчётов)
-- `ImportBatch`: `userId`, `sourceType` (broker-api / csv / xml), `status`, `fileRef`.
-- `ImportItem`: сырая строка из источника + статус сопоставления (matched / new / skipped / error).
+| Тип | На бумаги | На кэш |
+|---|---|---|
+| buy | + | − |
+| sell | − | + (+ реализованная прибыль) |
+| opening | + (снапшот) | 0 |
+| deposit / withdrawal | — | + / − |
+| income / dividend / coupon | — | + |
+| fee / tax | — | − |
 
-## Связи и правила
+## Валюты
 
-- **Позиции выводятся из транзакций** (ADR-003). Никакой параллельной «позиционной» модели.
-- **Доходы** — income events (ADR-006), не только денежные операции.
-- **Цены** — через PriceProvider (ADR-005), история цен хранится в `Price`.
-- **Мультивалютность**: каждая сумма имеет `currency`; пересчёт — только через явный FX-курс (актив типа `fx` / таблица курсов).
-- **Идемпотентность импорта**: уникальный `(source, sourceId)` на транзакцию.
+- В книге после записи суммы — в **валюте счёта** (при вводе чужой валюты — FX, ADR-009).
+- Сводка `GET /portfolio?displayCurrency=` — корневые итоги в выбранной валюте; карточки счетов — в своей.
+- WALLET / крипта — USD.
 
-## Типы транзакций и их влияние на книгу
+## Точка входа API
 
-| Тип | Количество | Деньги | Влияние |
-|---|---|---|---|
-| `buy` | + | − | +позиция, −кэш |
-| `sell` | − | + | −позиция, +кэш, реализованная прибыль |
-| `dividend`/`coupon` | 0 | + | +кэш, income event |
-| `fee`/`tax` | 0 | − | −кэш |
-| `deposit`/`withdrawal` | 0 | ± | движение кэша |
-| `transfer` | 0 | 0 | между счетами |
-| `opening` | + | 0 | снапшот-ввод существующего портфеля |
+`apps/api/src/main.ts`: префикс `/api/v1`, CORS, `ValidationPipe`.  
+БД: `apps/api/src/config/database.config.ts`; `synchronize` при `NODE_ENV !== 'production'`.
+
+Общие типы: `packages/contracts`.
+
+## См. также
+
+- [Режимы ввода](data-entry-modes.md)
+- [Позиции](../features/positions.md)
+- [Контракт API](../api/contract.md)

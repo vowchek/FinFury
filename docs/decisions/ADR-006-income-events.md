@@ -1,6 +1,6 @@
 # ADR-006: Доходы — дивиденды/купоны как income events
 
-**Status:** Proposed
+**Status:** Accepted (реализовано)
 **Date:** 2026-09-09
 **Deciders:** Владелец проекта
 
@@ -59,6 +59,8 @@
 - Статистика доходности (yield, total return) строится на income events.
 
 ## Action Items
-1. [ ] Сущность IncomeEvent и связь с транзакцией.
-2. [ ] Обработка налогов (taxWithheld) и DRIP.
-3. [ ] Отчёт по доходам.
+1. [x] Сущность IncomeEvent и связь с транзакцией (DTO есть в `packages/contracts`, реализация — фаза 2).
+2. [x] Обработка налогов (tax) и DRIP.
+3. [x] Отчёт по доходам (`GET /income/stats` + UI-экраны списка и отчёта; yield — подзадача 2.3).
+
+> **Примечание:** реализовано в фазе 2 (модуль `income`, см. [docs/features/income.md](../features/income.md)). DTO `IncomeEventDto`/`CreateIncomeEventDto`/`IncomeStatsDto` объявлены в `packages/contracts`.

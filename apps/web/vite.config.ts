@@ -1,5 +1,12 @@
 import react from '@vitejs/plugin-react';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
+
+// Абсолютный путь к контрактам — независим от cwd запуска vite
+// (иначе относительный alias ломается, если dev-сервер поднят не из apps/web).
+const contractsPath = fileURLToPath(
+  new URL('../../packages/contracts/src/index.ts', import.meta.url),
+);
 
 export default defineConfig({
   plugins: [react()],
@@ -11,7 +18,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@finfury/contracts': '../../packages/contracts/src/index.ts',
+      '@finfury/contracts': contractsPath,
     },
   },
 });

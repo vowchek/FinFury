@@ -1,6 +1,6 @@
 # ADR-004: Авторизация — JWT (access/refresh) + bcrypt
 
-**Status:** Proposed
+**Status:** Accepted (JWT + bcrypt готовы; sessions в БД / logout — позже)
 **Date:** 2026-09-09
 **Deciders:** Владелец проекта
 
@@ -59,6 +59,9 @@
 - Пароли — только bcrypt-хэш; никогда не логировать.
 
 ## Action Items
-1. [ ] Модуль auth (register/login/refresh/logout).
-2. [ ] Guard для защиты маршрутов + изоляция по userId.
-3. [ ] Таблица refresh-сессий.
+1. [x] Модуль auth: register/login/refresh (logout — [ ] не реализован).
+2. [x] Guard для защиты маршрутов + изоляция по userId (`JwtAuthGuard`, `@CurrentUser`).
+3. [ ] Таблица refresh-сессий (в текущей реализации refresh-токен stateless, в БД не хранится).
+4. [x] Silent refresh на фронте: при 401 клиент обновляет пару токенов и повторяет запрос; proactive refresh на 80% TTL access (см. `apps/web/src/api/client.ts`, `apps/web/src/api/session.ts`).
+
+> **Примечание:** реализация (фаза 1) включает register/login/refresh, `JwtAuthGuard` и изоляцию по `userId`. `logout` и хранение refresh-сессий в БД (для ротации/отзыва) — открытые пункты. Подробности — [docs/features/auth](../features/auth.md).

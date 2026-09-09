@@ -4,6 +4,9 @@ dist/
 build/
 *.tsbuildinfo
 
+# Turborepo — локальный кэш сборки
+.turbo/
+
 # Env — секреты никогда не коммитим
 .env
 .env.local
@@ -22,3 +25,6 @@ Thumbs.db
 
 # Test / coverage
 coverage/
+
+# Очередь задач — хранится локально, в репозиторий не попадает
+.agents/tasks

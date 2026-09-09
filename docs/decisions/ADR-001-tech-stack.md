@@ -1,6 +1,6 @@
 # ADR-001: Технологический стек — TypeScript-монорепо (React + NestJS)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-09-09
 **Deciders:** Владелец проекта
 
@@ -59,6 +59,6 @@
 - Возможна миграция отдельных модулей (например, парсинг отчётов) на другой язык без смены стека в целом.
 
 ## Action Items
-1. [ ] Создать монорепо (pnpm workspaces + turborepo).
-2. [ ] Развернуть скелеты `apps/web` (Vite) и `apps/api` (NestJS).
-3. [ ] Выделить общий пакет `packages/contracts` для DTO.
+1. [x] Создать монорепо (pnpm workspaces + turborepo).
+2. [x] Развернуть скелеты `apps/web` (Vite) и `apps/api` (NestJS).
+3. [x] Выделить общий пакет `packages/contracts` для DTO.

@@ -1,94 +1,65 @@
 # FinFury
 
-Личное финансовое приложение: учёт инвестиционных портфелей (акции, облигации, крипто), доходов (дивиденды/купоны), расходов и других полезных фич для личных финансов.
+> Личный учёт инвестиций: ввёл сделки — видишь портфель и стоимость.
 
-Современный «узкий» интерфейс в стиле банковского приложения, авторизация пользователей, отдельный бэкенд с API и БД.
+Узкий UI в духе банковского приложения. Бэкенд — REST API + PostgreSQL.
 
-> **Статус:** скелет монорепо развёрнут (React + NestJS + PostgreSQL). Реализованы auth (JWT), health-эндпоинт, PriceProvider-каркас. Дальше — по [дорожной карте](docs/roadmap.md).
-
-## Возможности (целевые)
-
-- Учёт портфелей: акции, облигации, фонды, крипто, кэш.
-- **Два режима ведения:**
-  - **Ручной** — два сценария:
-    - *Существующий портфель:* ввод текущих позиций и cost basis (без воспроизведения всей истории сделок).
-    - *Новый/небольшой портфель:* полный учёт транзакций (покупки/продажи).
-  - **Автоматический** — интеграции с API брокеров и/или парсинг выгруженных отчётов (CSV/XML).
-- Учёт дивидендов, купонов и прочих корпоративных действий.
-- Автоматическая оценка стоимости активов из внешних источников цен.
-- Учёт расходов и бюджетирование.
-- Авторизация пользователей.
-
-## Структура репозитория
-
-```
-docs/
-  architecture/
-    overview.md          # системная архитектура и стек
-    domain-model.md      # доменная модель и ER-диаграмма
-    data-entry-modes.md  # режимы ввода данных (ручной/авто)
-  decisions/             # ADR — решения по архитектуре
-    ADR-001-tech-stack.md
-    ADR-002-database.md
-    ADR-003-transaction-ledger.md
-    ADR-004-auth.md
-    ADR-005-price-provider.md
-    ADR-006-income-events.md
-  api/
-    contract.md          # контракт API (ресурсы, аутентификация)
-  roadmap.md             # MVP и этапы реализации
-```
+Полная карта документации → **[docs/README.md](docs/README.md)**.
 
 ## Быстрый старт
 
-Требования: Node.js ≥ 20, pnpm ≥ 9, Docker (для БД).
+Нужны: Node.js ≥ 20, pnpm ≥ 9, Docker.
 
 ```bash
-# 1. Установить зависимости
 pnpm install
-
-# 2. Создать .env из примера (секреты — только локально)
 cp .env.example .env
-
-# 3. Запустить PostgreSQL
 pnpm db:up
-
-# 4. Запустить всё (API + web)
 pnpm dev
-
-# Отдельно:
-pnpm dev:api   # API на http://localhost:3000/api/v1
-pnpm dev:web   # Web на http://localhost:5173
 ```
 
-Проверка API: `curl http://localhost:3000/api/v1/health`.
+- API: http://localhost:3000/api/v1 (`/health` для проверки)
+- Web: http://localhost:5173
 
 ## Команды
 
-| Команда | Описание |
+| Команда | Что делает |
 |---|---|
-| `pnpm dev` | Запустить API и web (turbo) |
-| `pnpm build` | Собрать все пакеты |
-| `pnpm typecheck` | Проверка типов во всех пакетах |
-| `pnpm test` | Тесты (пока нет) |
-| `pnpm db:up` | Поднять PostgreSQL (docker compose) |
-| `pnpm db:down` | Остановить PostgreSQL |
+| `pnpm dev` | API + web |
+| `pnpm dev:api` / `pnpm dev:web` | По отдельности |
+| `pnpm test` | Юнит-тесты |
+| `pnpm typecheck` / `pnpm build` | Типы / сборка |
+| `pnpm db:up` / `pnpm db:down` | PostgreSQL |
 
-## Ключевые решения (кратко)
+## Стек
 
-| Решение | Выбор | ADR |
-|---|---|---|
-| Стек | TypeScript-монорепо: React + NestJS | [ADR-001](docs/decisions/ADR-001-tech-stack.md) |
-| БД | PostgreSQL + Prisma | [ADR-002](docs/decisions/ADR-002-database.md) |
-| Учёт позиций | Единая транзакционная книга (snapshot → opening-транзакция) | [ADR-003](docs/decisions/ADR-003-transaction-ledger.md) |
-| Авторизация | JWT access/refresh, bcrypt | [ADR-004](docs/decisions/ADR-004-auth.md) |
-| Оценка активов | Абстракция PriceProvider с адаптерами и кэшем | [ADR-005](docs/decisions/ADR-005-price-provider.md) |
-| Дивиденды/купоны | Доходные события (income events) | [ADR-006](docs/decisions/ADR-006-income-events.md) |
+| Слой | Технология |
+|---|---|
+| Монорепо | pnpm + Turborepo |
+| Web | React 18, Vite, Tailwind, TanStack Query, Zustand |
+| API | NestJS 10, TypeORM |
+| БД | PostgreSQL 16 |
+| Auth | JWT + bcrypt |
 
-## Документация
+Почему так — [ADR](docs/decisions/README.md).
 
-- [Системная архитектура](docs/architecture/overview.md)
-- [Доменная модель](docs/architecture/domain-model.md)
-- [Режимы ввода данных](docs/architecture/data-entry-modes.md)
-- [Контракт API](docs/api/contract.md)
-- [Дорожная карта](docs/roadmap.md)
+## Репозиторий
+
+```
+apps/api          NestJS (модули auth, accounts, assets, transactions, positions, lots, income, history, prices)
+apps/web          React SPA
+packages/contracts  Общие DTO/типы
+docs/             Карта, архитектура, функции, API, ADR
+```
+
+## Переменные окружения
+
+| Переменная | Назначение |
+|---|---|
+| `DATABASE_URL` | PostgreSQL |
+| `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` | Подпись токенов |
+| `JWT_ACCESS_TTL` / `JWT_REFRESH_TTL` | TTL (по умолчанию `15m` / `30d`) |
+| `PORT` | API (по умолчанию `3000`) |
+| `CORS_ORIGIN` | Origin'ы через запятую |
+| `VITE_API_URL` | URL API для web |
+
+Секреты только в `.env`, не в коде.

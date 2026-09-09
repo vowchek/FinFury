@@ -1,6 +1,6 @@
 # ADR-005: Оценка активов — абстракция PriceProvider
 
-**Status:** Proposed
+**Status:** Accepted (адаптеры + кэш + FX готовы; таблица истории цен — позже)
 **Date:** 2026-09-09
 **Deciders:** Владелец проекта
 
@@ -55,11 +55,16 @@
 
 - Интерфейс `PriceProvider.getPrice(asset, date)` + `getHistory(asset, range)`.
 - Адаптеры: stocks, crypto, fx; fallback-цепочка.
-- Кэш цен (в памяти + в БД таблица `Price` для истории).
-- История цен хранится для оценки на дату и графиков.
+- Кэш цен: текущая — TTL 15 мин; previousClose — на календарный день (UTC), in-memory; в перспективе — Redis / таблица `Price`.
+- История цен хранится для оценки на дату и графиков (таблица `Price` — позже).
 - Бизнес-логика никогда не вызывает внешние API напрямую.
 
 ## Action Items
-1. [ ] Интерфейс PriceProvider и базовый кэш.
-2. [ ] Адаптеры: акции, крипто, FX.
-3. [ ] Fallback-цепочка и обработка лимитов.
+1. [x] Интерфейс PriceProvider и базовый кэш (`PriceProvider`, `PriceCache`, `StubPriceProvider`).
+2. [x] Адаптеры: MOEX (российские акции/облигации/ETF), Yahoo Finance (иностранные бумаги), CoinGecko (крипто).
+3. [x] Fallback-цепочка и обработка лимитов (`RateLimiter`).
+4. [x] Кэш previousClose на день + TTL текущей цены 15 мин (day change без лишних запросов).
+5. [x] FX-адаптер (валютные курсы); см. [ADR-009](ADR-009-fx-rates.md).
+6. [ ] История цен (таблица `Price`) — позже.
+
+> **Примечание:** реализованы интерфейс, кэш (current TTL + previousClose на день) и `PriceService` с fallback-цепочкой. Адаптеры MOEX / Yahoo / CoinGecko подключены. FX mid-rate — Frankfurter через `PriceService.getFxRate` (ADR-009). `StubPriceProvider` / `StubFxRateProvider` — только для тестов. Таблица `Price` — см. [docs/features/prices](../features/prices.md).
