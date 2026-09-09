@@ -1,0 +1,24 @@
+# Node
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+
+# Env — секреты никогда не коммитим
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Test / coverage
+coverage/

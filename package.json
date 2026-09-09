@@ -1,0 +1,27 @@
+{
+  "name": "vowchek",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Личное финансовое приложение: портфели, доходы, расходы",
+  "packageManager": "pnpm@12.3.4",
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@vowchek/web",
+    "dev:api": "turbo run dev --filter=@vowchek/api",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose stop db"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "esbuild"
+    ]
+  }
+}
