@@ -1,8 +1,8 @@
 {
-  "name": "@vowchek/api",
+  "name": "@finfury/api",
   "version": "0.1.0",
   "private": true,
-  "description": "API-бэкенд vowchek (NestJS)",
+  "description": "API-бэкенд FinFury (NestJS)",
   "scripts": {
     "dev": "nest start --watch",
     "build": "nest build",
@@ -16,7 +16,7 @@
     "@nestjs/platform-express": "^10.4.0",
     "@nestjs/config": "^3.2.0",
     "@nestjs/typeorm": "^10.0.0",
-    "@vowchek/contracts": "workspace:*",
+    "@finfury/contracts": "workspace:",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",

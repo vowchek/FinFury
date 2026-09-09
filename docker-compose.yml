@@ -1,16 +1,16 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: vowchek-db
+    container_name: FinFury-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: vowchek
+      POSTGRES_DB: FinFury
     ports:
       - '5432:5432'
     volumes:
-      - vowchek_pgdata:/var/lib/postgresql/data
+      - FinFury_pgdata:/var/lib/postgresql/data
 
 volumes:
-  vowchek_pgdata:
+  FinFury_pgdata:

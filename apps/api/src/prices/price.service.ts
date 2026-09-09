@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AssetType, Money } from '@vowchek/contracts';
+import { AssetType, Money } from '@finfury/contracts';
 import { PriceCache, StubPriceProvider } from './price-cache';
 import { PriceProvider } from './price-provider.interface';
 

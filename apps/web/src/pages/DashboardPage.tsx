@@ -14,7 +14,7 @@ export function DashboardPage() {
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <h1 className="text-lg font-semibold">vowchek</h1>
+      <h1 className="text-lg font-semibold">FinFury</h1>
       {isLoading && <p className="text-sm text-gray-500">Проверяю API…</p>}
       {isError && <p className="text-sm text-red-600">API недоступен</p>}
       {data && (

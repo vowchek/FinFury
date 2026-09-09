@@ -19,7 +19,7 @@
     "types": ["vite/client"],
     "baseUrl": ".",
     "paths": {
-      "@vowchek/contracts": ["../../packages/contracts/src/index.ts"]
+      "@finfury/contracts": ["../../packages/contracts/src/index.ts"]
     }
   },
   "include": ["src", "vite.config.ts"]

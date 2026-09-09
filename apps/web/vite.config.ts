@@ -11,7 +11,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@vowchek/contracts': '../../packages/contracts/src/index.ts',
+      '@finfury/contracts': '../../packages/contracts/src/index.ts',
     },
   },
 });

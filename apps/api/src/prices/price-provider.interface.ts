@@ -1,4 +1,4 @@
-import { Money } from '@vowchek/contracts';
+import { Money } from '@finfury/contracts';
 
 /**
  * Абстракция источника цен (ADR-005).

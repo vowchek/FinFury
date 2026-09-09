@@ -1,5 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { AuthResponseDto } from '@vowchek/contracts';
+import { AuthResponseDto } from '@finfury/contracts';
 import { LoginDto, RegisterDto } from './auth.dto';
 import { AuthService } from './auth.service';
 

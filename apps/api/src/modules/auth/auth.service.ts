@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AuthResponseDto, UserDto } from '@vowchek/contracts';
+import { AuthResponseDto, UserDto } from '@finfury/contracts';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { Repository } from 'typeorm';
